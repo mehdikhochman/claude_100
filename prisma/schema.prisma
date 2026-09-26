@@ -1,0 +1,143 @@
+// LEGACY v2 — database schema.
+//
+// Everything under "Legacy data model" mirrors the original LEGACY app.
+// The extra fields/models further down power the "Beyond legacy" features
+// (waitlist, audit log, rate limiting). Nothing legacy was removed or renamed.
+
+generator client {
+  // Prisma 7 "prisma-client" generator: emits plain TypeScript into src/generated.
+  // The folder is git-ignored and rebuilt by `prisma generate` on `npm install`.
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  // The connection URL lives in prisma.config.ts (Prisma 7 style), not here.
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Legacy data model
+// ---------------------------------------------------------------------------
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+// CONFIRMED / CANCELLED are the legacy statuses.
+// WAITLISTED is new: the member is queued for a spot on a full session.
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  WAITLISTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  /// Always stored lowercase so lookups are case-insensitive.
+  email        String   @unique
+  /// Display form, e.g. "+225 07 08 09 10 11". Optional.
+  phone        String?
+  /// Digits only of dial code + number ("22507080910 11" -> "2250708091011").
+  /// Unique, so the same local number is allowed under different country codes.
+  phoneDigits  String?  @unique
+  passwordHash String
+  role         Role     @default(MEMBER)
+  /// Vercel Blob pathname of the resized avatar (never served directly; see /avatar/[id]).
+  avatarUrl    String?
+  /// When false, /profile/[id] hides photo and details. The LEGACY score is always public.
+  isPublic     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  bookings  Booking[]
+  auditLogs AuditLog[] @relation("AuditActor")
+}
+
+model StudioClass {
+  id              String  @id @default(cuid())
+  name            String
+  /// Free text category shown as an eyebrow label, e.g. "Pilates", "Run".
+  type            String
+  durationMinutes Int
+  /// "Beginner" | "Intermediate" | "Advanced" | "All levels" (free text).
+  level           String
+  description     String
+  /// Archived classes stay in history but cannot get new sessions and are hidden publicly.
+  isArchived      Boolean @default(false)
+  createdAt       DateTime @default(now())
+
+  sessions Session[]
+}
+
+model Session {
+  id          String      @id @default(cuid())
+  classId     String
+  class       StudioClass @relation(fields: [classId], references: [id])
+  coachName   String
+  /// Stored in UTC. Displayed in STUDIO_TIMEZONE.
+  startsAt    DateTime
+  capacity    Int
+  /// Number of CONFIRMED bookings. Only ever changed by atomic conditional
+  /// UPDATEs inside lib/booking.ts — never read-then-write.
+  bookedCount Int         @default(0)
+
+  bookings Booking[]
+
+  @@index([startsAt])
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  status    BookingStatus @default(CONFIRMED)
+  /// Cash paid at the studio — toggled manually by an admin.
+  isPaid    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+
+  // --- Beyond legacy: waitlist -------------------------------------------
+  /// When the member joined the waitlist. Earliest wins the next free spot.
+  waitlistedAt    DateTime?
+  /// Set when the member was auto-promoted from the waitlist to CONFIRMED.
+  promotedAt      DateTime?
+  /// Set when the member dismissed the "You're in!" banner.
+  promotionSeenAt DateTime?
+
+  /// One booking row per member per session. Re-booking reuses the row.
+  @@unique([userId, sessionId])
+  @@index([sessionId, status])
+  @@index([userId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Beyond legacy
+// ---------------------------------------------------------------------------
+
+/// Who did what in /admin (archive a class, mark someone paid, ...).
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  /// Short verb-noun code, e.g. "class.archive", "booking.markPaid".
+  action     String
+  /// "StudioClass" | "Session" | "Booking" | "User"
+  targetType String
+  targetId   String?
+  /// Free-form JSON with the interesting bits (old/new values, names).
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Fixed-window rate limit counters for login/register (keyed by IP and by email).
+/// Kept in Postgres because serverless functions share no memory.
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+}
