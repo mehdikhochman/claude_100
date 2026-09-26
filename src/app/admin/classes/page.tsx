@@ -29,7 +29,7 @@ export default async function AdminClassesPage() {
         <div className="empty">No classes yet. Create the first one.</div>
       ) : (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table--wide">
             <thead>
               <tr>
                 <th scope="col">Class</th>

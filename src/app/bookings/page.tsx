@@ -48,7 +48,7 @@ function Section({ title, rows, emptyText }: { title: string; rows: Row[]; empty
         <p className="muted small">{emptyText}</p>
       ) : (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table--stack">
             <thead>
               <tr>
                 <th scope="col">Session</th>
@@ -61,16 +61,16 @@ function Section({ title, rows, emptyText }: { title: string; rows: Row[]; empty
             <tbody>
               {rows.map((b) => (
                 <tr key={b.id}>
-                  <td>
+                  <td data-label="Session">
                     <strong>{b.session.class.name}</strong>
                     <div className="small muted">with {b.session.coachName}</div>
                   </td>
-                  <td className="nowrap">{formatSessionTime(b.session.startsAt)}</td>
-                  <td>
+                  <td className="nowrap" data-label="When">{formatSessionTime(b.session.startsAt)}</td>
+                  <td data-label="Status">
                     <StatusBadge status={b.status} />
                   </td>
-                  <td>{b.status === "CONFIRMED" ? <PaidBadge isPaid={b.isPaid} /> : <span className="muted">—</span>}</td>
-                  <td className="nowrap small muted">{formatDateTime(b.createdAt)}</td>
+                  <td data-label="Payment">{b.status === "CONFIRMED" ? <PaidBadge isPaid={b.isPaid} /> : <span className="muted">—</span>}</td>
+                  <td className="nowrap small muted" data-label="Booked">{formatDateTime(b.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

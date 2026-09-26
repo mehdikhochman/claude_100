@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getAttendanceTrend, getBusiestSlots, getOverviewStats } from "@/lib/admin/stats";
 import { AttendanceChart, BusiestSlotsChart } from "@/components/admin/charts";
+import { studioDayKey } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -44,7 +45,7 @@ export default async function AdminOverviewPage() {
           <h2 id="trend-title" style={{ fontSize: "1.5rem" }}>
             Bookings per class, last 7 and next 7 days
           </h2>
-          <AttendanceChart trend={trend} />
+          <AttendanceChart trend={trend} todayKey={studioDayKey(new Date())} />
         </section>
         <section className="card" aria-labelledby="slots-title">
           <span className="eyebrow">Busiest time slots</span>

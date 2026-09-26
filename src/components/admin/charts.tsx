@@ -1,87 +1,58 @@
-// Small, dependency-free charts for the admin overview (inline SVG, rendered
-// on the server). Each chart also renders its data as a table for screen
-// readers and anyone who prefers numbers.
+// Small, dependency-free charts for the admin overview. Plain HTML + CSS so
+// text stays crisp at any width. Each chart also renders its data as a table
+// for screen readers and anyone who prefers numbers.
 import type { AttendanceTrend, SlotStat } from "@/lib/admin/stats";
 
 const SERIES_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
 
 /** Bookings per class per day, as stacked bars. */
-export function AttendanceChart({ trend }: { trend: AttendanceTrend }) {
+export function AttendanceChart({ trend, todayKey }: { trend: AttendanceTrend; todayKey: string }) {
   const { classNames, points } = trend;
-  const width = 640;
-  const height = 220;
-  const pad = { top: 16, right: 8, bottom: 28, left: 28 };
-  const innerW = width - pad.left - pad.right;
-  const innerH = height - pad.top - pad.bottom;
   const max = Math.max(1, ...points.map((p) => p.total));
-  const step = innerW / points.length;
-  const barW = Math.min(28, step * 0.62);
-  const gridLines = [0, 0.5, 1].map((f) => Math.round(max * f));
-  const todayIndex = points.findIndex((p) => p.dayKey === points[Math.floor(points.length / 2)]?.dayKey);
+  // Round the axis top up to a friendly number.
+  const axisMax = Math.max(4, Math.ceil(max / 4) * 4);
 
   return (
-    <figure className="chart" aria-describedby="attendance-desc">
-      <figcaption className="sr-only" id="attendance-desc">
-        Confirmed bookings per class for each day, past week and next week.
-      </figcaption>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Bookings per class per day">
-        {gridLines.map((v) => {
-          const y = pad.top + innerH - (v / max) * innerH;
-          return (
-            <g key={v}>
-              <line x1={pad.left} x2={width - pad.right} y1={y} y2={y} stroke="var(--chart-grid)" strokeWidth={1} />
-              <text x={pad.left - 6} y={y + 4} textAnchor="end" fontSize={11} fill="var(--slate-text)">
-                {v}
-              </text>
-            </g>
-          );
-        })}
-        {points.map((p, i) => {
-          const x = pad.left + i * step + (step - barW) / 2;
-          let yCursor = pad.top + innerH;
-          const isToday = i === todayIndex;
-          return (
-            <g key={p.dayKey}>
+    <figure className="chart" style={{ padding: 0 }}>
+      <figcaption className="sr-only">Confirmed bookings per class for each day, past week and next week.</figcaption>
+      <div className="stack-chart" aria-hidden="true">
+        <div className="stack-chart__axis">
+          <span>{axisMax}</span>
+          <span>{axisMax / 2}</span>
+          <span>0</span>
+        </div>
+        <div className="stack-chart__plot">
+          {points.map((p) => (
+            <div key={p.dayKey} className="stack-chart__col" title={`${p.label}: ${p.total} booking${p.total === 1 ? "" : "s"}`}>
               {classNames.map((name, ci) => {
                 const value = p.perClass[name] ?? 0;
                 if (value === 0) return null;
-                const h = (value / max) * innerH;
-                yCursor -= h;
-                const y = yCursor;
                 return (
-                  <rect
+                  <span
                     key={name}
-                    x={x}
-                    y={y + 1}
-                    width={barW}
-                    height={Math.max(0, h - 2)}
-                    rx={2}
-                    fill={SERIES_COLORS[ci % SERIES_COLORS.length]}
-                  >
-                    <title>{`${p.label}: ${name} — ${value} booking${value === 1 ? "" : "s"}`}</title>
-                  </rect>
+                    className="stack-chart__seg"
+                    style={{ height: `${(value / axisMax) * 100}%`, background: SERIES_COLORS[ci % SERIES_COLORS.length] }}
+                    title={`${p.label} · ${name}: ${value}`}
+                  />
                 );
               })}
               {p.total > 0 ? (
-                <text x={x + barW / 2} y={yCursor - 4} textAnchor="middle" fontSize={11} fill="var(--ink)">
+                <span className="stack-chart__total" style={{ bottom: `${(p.total / axisMax) * 100}%` }}>
                   {p.total}
-                </text>
+                </span>
               ) : null}
-              <text
-                x={x + barW / 2}
-                y={height - 8}
-                textAnchor="middle"
-                fontSize={11}
-                fill={isToday ? "var(--ink)" : "var(--slate-text)"}
-                fontWeight={isToday ? 600 : 400}
-              >
-                {i % 2 === 0 || isToday ? p.label : ""}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-      <div className="chart__legend" aria-hidden="true">
+            </div>
+          ))}
+        </div>
+        <div className="stack-chart__labels">
+          {points.map((p) => (
+            <span key={p.dayKey} className={`stack-chart__label ${p.dayKey === todayKey ? "stack-chart__label--today" : ""}`}>
+              {p.dayKey === todayKey ? "Today" : p.label}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="chart__legend">
         {classNames.map((name, ci) => (
           <span key={name} style={{ ["--swatch" as string]: SERIES_COLORS[ci % SERIES_COLORS.length] }}>
             {name}

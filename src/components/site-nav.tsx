@@ -15,10 +15,10 @@ export function SiteNav({ user, logoutAction }: { user: NavUser; logoutAction: (
     setOpen(false);
   }, [pathname]);
 
-  const link = (href: string, label: string, extraClass = "") => {
+  const link = (href: string, label: string, extraClass = "", divided = false) => {
     const current = pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
     return (
-      <li>
+      <li className={divided ? "site-nav__item--divided" : undefined}>
         <Link
           href={href}
           className={`site-nav__link ${extraClass}`.trim()}
@@ -49,12 +49,11 @@ export function SiteNav({ user, logoutAction }: { user: NavUser; logoutAction: (
           {link("/schedule", "Schedule")}
           {user ? (
             <>
-              {link("/dashboard", "Dashboard")}
+              {link("/dashboard", "Dashboard", "", true)}
               {link("/bookings", "My bookings")}
               {link("/profile", "Profile")}
               {user.role === "ADMIN" ? link("/admin", "Admin") : null}
-              <li className="site-nav__divider" role="presentation" />
-              <li className="site-nav__user">
+              <li className="site-nav__user site-nav__item--divided">
                 <span>{user.name.split(" ")[0]}</span>
               </li>
               <li>
@@ -67,8 +66,7 @@ export function SiteNav({ user, logoutAction }: { user: NavUser; logoutAction: (
             </>
           ) : (
             <>
-              <li className="site-nav__divider" role="presentation" />
-              {link("/login", "Log in")}
+              {link("/login", "Log in", "", true)}
               {link("/register", "Sign up", "site-nav__link--cta")}
             </>
           )}

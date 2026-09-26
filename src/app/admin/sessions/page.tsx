@@ -54,7 +54,7 @@ export default async function AdminSessionsPage({ searchParams }: { searchParams
         <div className="empty">No {filter} sessions.</div>
       ) : (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table table--wide">
             <thead>
               <tr>
                 <th scope="col">When</th>
