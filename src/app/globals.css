@@ -1587,3 +1587,16 @@ main {
 .tabular { font-variant-numeric: tabular-nums; }
 .w-full { width: 100%; }
 .inline { display: inline; }
+
+/* Badges on the dark green cards need a light treatment to stay readable. */
+.card--forest .badge--muted,
+.notice--promoted .badge {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.notice--promoted .eyebrow {
+  color: #fff;
+  opacity: 0.85;
+}
