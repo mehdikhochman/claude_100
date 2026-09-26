@@ -1600,3 +1600,12 @@ main {
   color: #fff;
   opacity: 0.85;
 }
+
+/* Chart palette: brand-derived hues with enough chroma to tell apart
+   (validated for colour-vision deficiency on the surface colour). */
+:root {
+  --chart-1: #237f5a;
+  --chart-2: #c97840;
+  --chart-3: #5a6fb0;
+  --chart-grid: rgba(26, 32, 24, 0.1);
+}
