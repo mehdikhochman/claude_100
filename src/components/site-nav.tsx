@@ -2,18 +2,16 @@
 // Header navigation. Collapses behind a hamburger below 1024px.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type NavUser = { name: string; role: "MEMBER" | "ADMIN" } | null;
 
 export function SiteNav({ user, logoutAction }: { user: NavUser; logoutAction: () => Promise<void> }) {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
-
-  // Close the menu after navigating.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  // We remember the path the menu was opened on. Navigating changes the path,
+  // which closes the menu automatically — no effect needed.
+  const [openedOn, setOpenedOn] = useState<string | null>(null);
+  const open = openedOn === pathname;
 
   const link = (href: string, label: string, extraClass = "", divided = false) => {
     const current = pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
@@ -38,7 +36,7 @@ export function SiteNav({ user, logoutAction }: { user: NavUser; logoutAction: (
         aria-expanded={open}
         aria-controls="site-nav"
         aria-label={open ? "Close menu" : "Open menu"}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpenedOn(open ? null : pathname)}
       >
         <span className="nav-toggle__bars" aria-hidden="true" />
       </button>

@@ -56,7 +56,8 @@ export function clientIpFromHeaders(headers: Headers): string {
 
 // Limits used by the auth actions. Generous for humans, tight for scripts.
 export const LIMITS = {
-  loginPerIp: { limit: 20, windowMs: 15 * 60 * 1000 },
+  // Per IP is deliberately roomy: a studio's shared Wi-Fi is one IP for many members.
+  loginPerIp: { limit: 30, windowMs: 15 * 60 * 1000 },
   loginPerAccount: { limit: 5, windowMs: 15 * 60 * 1000 },
-  registerPerIp: { limit: 10, windowMs: 60 * 60 * 1000 },
+  registerPerIp: { limit: 15, windowMs: 60 * 60 * 1000 },
 } as const;
