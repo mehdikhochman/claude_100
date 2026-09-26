@@ -4,6 +4,20 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 import { getDatabaseUrl } from "./src/lib/env";
 
+/**
+ * `prisma generate` (run on `npm install`, including on Vercel) does not need a
+ * database, so a missing URL must not break it. Commands that do need one
+ * (`migrate deploy`, `db seed`) fail later with Prisma's own clear error, and
+ * `npm run build` checks the variables up front via scripts/check-env.mjs.
+ */
+function optionalDatabaseUrl(): string | undefined {
+  try {
+    return getDatabaseUrl();
+  } catch {
+    return undefined;
+  }
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -12,6 +26,6 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: getDatabaseUrl(),
+    url: optionalDatabaseUrl(),
   },
 });

@@ -25,9 +25,16 @@ const hasDb = dbCandidates.some(
   (name) => isSet(name) && /^postgres(ql)?:\/\//i.test(process.env[name].trim()),
 );
 if (!hasDb) {
+  const accelerate = dbCandidates.find(
+    (name) => isSet(name) && /^prisma\+postgres:\/\//i.test(process.env[name].trim()),
+  );
   problems.push(
-    "  - DATABASE_URL is missing (or not a postgres:// URL). " +
-      "Set it to your Postgres connection string.",
+    "  - No postgres:// database URL found among " + dbCandidates.join(", ") + "." +
+      (accelerate
+        ? ` ${accelerate} is a prisma+postgres:// (Accelerate) URL, which the pg driver cannot use. ` +
+          "In Vercel → Storage → your Prisma Postgres database, copy the direct TCP connection string " +
+          "(starts with postgres://) into a POSTGRES_URL environment variable."
+        : " Set DATABASE_URL to your Postgres connection string."),
   );
 }
 
