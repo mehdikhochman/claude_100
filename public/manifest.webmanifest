@@ -1,0 +1,16 @@
+{
+  "name": "LEGACY — Movement studio",
+  "short_name": "LEGACY",
+  "description": "Book Pilates, Hot Mat Pilates and Run Club sessions at LEGACY, Abidjan.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F4F1E8",
+  "theme_color": "#14513B",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

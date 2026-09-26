@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Do not regenerate AGENTS.md / CLAUDE.md on every `next dev`.
+  agentRules: false,
   // sharp and pg are native/Node-only; keep them out of the bundler.
   serverExternalPackages: ["sharp", "pg"],
   // A few sensible security headers. CSP is intentionally left out to keep
