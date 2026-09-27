@@ -38,3 +38,14 @@ describe("getDatabaseUrl", () => {
     expect(() => getDatabaseUrl()).toThrow(/DATABASE_URL/);
   });
 });
+
+describe("getDatabaseUrl fallbacks", () => {
+  it("accepts a store connected with a custom prefix", () => {
+    for (const k of ["DATABASE_URL", "POSTGRES_PRISMA_URL", "POSTGRES_URL", "PRISMA_DATABASE_URL", "DATABASE_URL_UNPOOLED", "POSTGRES_URL_NON_POOLING"]) {
+      delete process.env[k];
+    }
+    process.env.STORAGE_POSTGRES_URL = "postgres://u:p@host/db";
+    expect(getDatabaseUrl()).toBe("postgres://u:p@host/db");
+    delete process.env.STORAGE_POSTGRES_URL;
+  });
+});

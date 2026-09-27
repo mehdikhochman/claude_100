@@ -19,9 +19,12 @@ const DATABASE_URL_CANDIDATES = [
   "DATABASE_URL",
   "POSTGRES_PRISMA_URL",
   "POSTGRES_URL",
+  "PRISMA_DATABASE_URL",
   "DATABASE_URL_UNPOOLED",
   "POSTGRES_URL_NON_POOLING",
 ];
+
+const POSTGRES_URL_PATTERN = /^postgres(ql)?:\/\//i;
 
 /**
  * Pick the first usable Postgres connection string.
@@ -31,7 +34,14 @@ const DATABASE_URL_CANDIDATES = [
 export function getDatabaseUrl(): string {
   for (const name of DATABASE_URL_CANDIDATES) {
     const value = readEnv(name);
-    if (value && /^postgres(ql)?:\/\//i.test(value)) return value;
+    if (value && POSTGRES_URL_PATTERN.test(value)) return value;
+  }
+  // Last resort: a store connected with a custom prefix (e.g. STORAGE_POSTGRES_URL).
+  // Any *_URL variable holding a postgres:// connection string counts.
+  for (const name of Object.keys(process.env).sort()) {
+    if (!name.endsWith("_URL") || name === "TEST_DATABASE_URL") continue;
+    const value = readEnv(name);
+    if (value && POSTGRES_URL_PATTERN.test(value)) return value;
   }
   throw new Error(
     "No database URL found. Set DATABASE_URL to a postgres:// connection string " +
